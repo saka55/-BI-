@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Retail Pulse BI | Sales Dashboard</title>
+    <link rel="stylesheet" href="./styles.css">
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="ダッシュボード操作">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true">RP</div>
+          <div>
+            <h1>Retail Pulse BI</h1>
+            <p>店舗・EC 売上分析</p>
+          </div>
+        </div>
+
+        <nav class="nav-tabs" aria-label="表示切り替え">
+          <button class="nav-tab is-active" type="button" data-view="overview">
+            <span aria-hidden="true">▦</span>
+            <span>概要</span>
+          </button>
+          <button class="nav-tab" type="button" data-view="region">
+            <span aria-hidden="true">⌖</span>
+            <span>地域</span>
+          </button>
+          <button class="nav-tab" type="button" data-view="product">
+            <span aria-hidden="true">◫</span>
+            <span>商品</span>
+          </button>
+          <button class="nav-tab" type="button" data-view="record">
+            <span aria-hidden="true">□</span>
+            <span>実績欄</span>
+          </button>
+        </nav>
+
+        <section class="control-group" aria-labelledby="filter-title">
+          <div class="control-title">
+            <h2 id="filter-title">Filters</h2>
+            <button class="icon-button" id="resetFilters" type="button" title="絞り込みをリセット" aria-label="絞り込みをリセット">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M4 7h9a5 5 0 1 1-4.2 7.7"/>
+                <path d="M4 7l4-4M4 7l4 4"/>
+              </svg>
+            </button>
+          </div>
+
+          <label class="field">
+            <span>期間</span>
+            <select id="dateRange">
+              <option value="6">直近6か月</option>
+              <option value="12" selected>直近12か月</option>
+              <option value="18">全期間</option>
+            </select>
+          </label>
+
+          <label class="field">
+            <span>地域</span>
+            <select id="regionFilter">
+              <option value="all">すべて</option>
+            </select>
+          </label>
+
+          <label class="field">
+            <span>カテゴリ</span>
+            <select id="categoryFilter">
+              <option value="all">すべて</option>
+            </select>
+          </label>
+
+          <fieldset class="channel-set">
+            <legend>チャネル</legend>
+            <label><input type="checkbox" value="店舗" checked> 店舗</label>
+            <label><input type="checkbox" value="EC" checked> EC</label>
+            <label><input type="checkbox" value="卸" checked> 卸</label>
+          </fieldset>
+        </section>
+
+        <section class="control-group compact">
+          <h2>Actions</h2>
+          <div class="action-row">
+            <button class="action-button" id="exportCsv" type="button">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 3v11"/>
+                <path d="M7 10l5 5 5-5"/>
+                <path d="M5 20h14"/>
+              </svg>
+              <span>CSV</span>
+            </button>
+            <button class="action-button" id="copySummary" type="button">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <rect x="8" y="8" width="11" height="11" rx="2"/>
+                <path d="M5 16V7a2 2 0 0 1 2-2h9"/>
+              </svg>
+              <span>説明文</span>
+            </button>
+          </div>
+        </section>
+      </aside>
+
+      <main class="main-content">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">BI portfolio project</p>
+            <h2 id="viewTitle">売上状況サマリー</h2>
+          </div>
+          <div class="topbar-meta">
+            <span id="activeFilterLabel">直近12か月 / 全地域 / 全カテゴリ</span>
+            <span>Sample data: 2025.01 - 2026.06</span>
+          </div>
+        </header>
+
+        <section class="kpi-grid" id="kpiGrid" aria-label="主要KPI"></section>
+
+        <section class="dashboard-grid">
+          <article class="panel panel-wide" data-panel="overview region product">
+            <div class="panel-header">
+              <div>
+                <h3>月次推移</h3>
+                <p>売上・粗利・目標の推移</p>
+              </div>
+              <span class="panel-badge" id="targetBadge">--</span>
+            </div>
+            <div class="chart-frame">
+              <svg id="trendChart" viewBox="0 0 760 320" role="img" aria-label="売上と粗利の月次推移"></svg>
+            </div>
+          </article>
+
+          <article class="panel" data-panel="overview">
+            <div class="panel-header">
+              <div>
+                <h3>チャネル構成</h3>
+                <p>売上比率と粗利率</p>
+              </div>
+            </div>
+            <div class="mix-layout">
+              <div class="donut" id="channelDonut" aria-label="チャネル構成グラフ"></div>
+              <div class="legend-list" id="channelLegend"></div>
+            </div>
+          </article>
+
+          <article class="panel" data-panel="region">
+            <div class="panel-header">
+              <div>
+                <h3>地域別売上</h3>
+                <p>売上順ランキング</p>
+              </div>
+            </div>
+            <div class="chart-frame compact-chart">
+              <svg id="regionChart" viewBox="0 0 520 300" role="img" aria-label="地域別売上ランキング"></svg>
+            </div>
+          </article>
+
+          <article class="panel" data-panel="product">
+            <div class="panel-header">
+              <div>
+                <h3>カテゴリ別収益性</h3>
+                <p>売上・粗利率・欠品率</p>
+              </div>
+            </div>
+            <div id="categoryRanking" class="ranking-list"></div>
+          </article>
+
+          <article class="panel panel-wide" data-panel="overview region product">
+            <div class="panel-header">
+              <div>
+                <h3>地域 × カテゴリ ヒートマップ</h3>
+                <p>濃い色ほど売上が大きい領域</p>
+              </div>
+            </div>
+            <div class="heatmap" id="heatmap"></div>
+          </article>
+
+          <article class="panel" data-panel="overview product">
+            <div class="panel-header">
+              <div>
+                <h3>自動インサイト</h3>
+                <p>フィルタ条件に応じて更新</p>
+              </div>
+            </div>
+            <ul class="insight-list" id="insightList"></ul>
+          </article>
+
+          <article class="panel panel-wide" data-panel="overview region product">
+            <div class="panel-header">
+              <div>
+                <h3>明細テーブル</h3>
+                <p>売上上位セグメント</p>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table id="detailTable">
+                <thead>
+                  <tr>
+                    <th>地域</th>
+                    <th>カテゴリ</th>
+                    <th>チャネル</th>
+                    <th>売上</th>
+                    <th>粗利率</th>
+                    <th>注文数</th>
+                    <th>目標達成</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </article>
+
+          <article class="panel panel-wide record-panel" data-panel="record">
+            <div class="panel-header">
+              <div>
+                <h3>実績欄に記載できる内容</h3>
+                <p>制作物の概要、構成、こだわりをそのまま転記しやすい形で整理</p>
+              </div>
+            </div>
+            <div class="record-grid">
+              <section>
+                <h4>Webサイト / システムの内容</h4>
+                <p>
+                  小売・ECの売上データを対象に、売上、粗利、目標達成率、チャネル別比率、地域別売上、カテゴリ別収益性を可視化するBIダッシュボードです。
+                  期間、地域、商品カテゴリ、販売チャネルで絞り込み、CSV出力と説明文コピーにも対応しています。
+                </p>
+              </section>
+              <section>
+                <h4>システム構成</h4>
+                <div class="architecture" aria-label="システム構成図">
+                  <div>販売データ<br><small>CSV / 基幹想定</small></div>
+                  <span>→</span>
+                  <div>集計処理<br><small>JavaScript</small></div>
+                  <span>→</span>
+                  <div>可視化UI<br><small>HTML / CSS / SVG</small></div>
+                  <span>→</span>
+                  <div>分析・出力<br><small>Insight / CSV</small></div>
+                </div>
+              </section>
+              <section>
+                <h4>こだわった点・注意した点</h4>
+                <ul class="plain-list">
+                  <li>現場担当者がすぐ判断できるよう、売上だけでなく粗利率、欠品率、目標達成率を同時に確認できる設計にした。</li>
+                  <li>フィルタ操作後にKPI、グラフ、テーブル、自動インサイトが連動して更新されるようにした。</li>
+                  <li>スマートフォンでも閲覧できるよう、サイドバー、KPI、表のレイアウトをレスポンシブ対応にした。</li>
+                  <li>外部ライブラリなしで動く構成にし、GitHub Pagesなどへ配置しやすい静的Webアプリとして作成した。</li>
+                </ul>
+              </section>
+            </div>
+          </article>
+        </section>
+      </main>
+    </div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script src="./app.js"></script>
+  </body>
+</html>
